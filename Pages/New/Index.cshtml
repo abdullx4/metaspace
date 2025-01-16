@@ -1,0 +1,218 @@
+@page
+@model Booking.Pages.NewModel
+@{
+ViewData["Title"] = "New";
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Room Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = ('0' + (today.getMonth() + 1)).slice(-2);
+            var day = ('0' + today.getDate()).slice(-2);
+            var todayFormatted = `${year}-${month}-${day}`;
+
+            var startDate = document.getElementById('start-date');
+            startDate.setAttribute('min', todayFormatted);
+            var endDate = document.getElementById('end-date');
+            endDate.setAttribute('min', todayFormatted);
+        });
+
+    </script>
+
+</head>
+
+<body>
+
+    <script>
+
+        var firebaseConfig = {
+            apiKey: "AIzaSyDQrSc8FZoWAEF76DMx5qK-IEGXcgMK-Dg",
+            authDomain: "bookingrooms-5d701.firebaseapp.com",
+            projectId: "bookingrooms-5d701",
+            storageBucket: "bookingrooms-5d701.firebasestorage.app",
+            messagingSenderId: "151352498300",
+            appId: "1:151352498300:web:c011d765d0932cf5d811f9"
+        };
+        var user_id = null;
+        var app = firebase.initializeApp(firebaseConfig);
+
+        var firestore = firebase.firestore();
+        var auth = firebase.auth();
+
+        auth.onAuthStateChanged(user => {
+            user_id = user.uid;
+        });
+
+        var bookRoom = () => {
+            var startDate = document.getElementById('start-date').value;
+            var endDate = document.getElementById('end-date').value;
+            var room = document.getElementById('Room').value;
+            var error_message = document.getElementById("error_message");
+            error_message.innerText = "";
+
+            if (endDate == '' || startDate == '' || room == '') {
+                error_message.innerText = "Enter all required feilds";
+                return false;
+            }
+
+            firestore
+                .collection("Bookings")
+                .where("date", ">=", new Date(startDate + " 00:00:00"))
+                .where("date", "<=", new Date(endDate))
+                .where('Room', '==', room)
+                .get()
+                .then(res => {
+                    console.log(res);
+
+                    if (res.docs.length == 0) {
+                        firestore
+                            .collection("Bookings")
+                            .add({
+                                room: room,
+                                date: new Date(),
+                                startDate: startDate,
+                                endDate: endDate,
+                                userId: user_id
+                            })
+                            .then(res => {
+                                window.location = '/bookings';
+                            })
+                            .catch(error => {
+                                console.log(error);
+                            })
+                    } else {
+                        error_message.innerText = "Room is fully booked try another room.";
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+
+                })
+
+        }
+
+
+        firestore
+            .collection("Rooms")
+            .get()
+            .then(res => {
+                var list = "";
+                res.forEach(doc => {
+                    list += `<option value="${doc.data().name}">${doc.data().name}</option>`
+                });
+                document.getElementById('Room').innerHTML = list;
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    </script>
+
+    <div id="form2" runat="server">
+        <div class="form-container">
+            <h2>Room Booking</h2>
+            <br>
+
+            <pp id="RoomsLabel" class="form-label">Select Room(s):</p>
+
+
+                <select id="Room" class="form-input">
+                    <option value="">Select Room</option>
+                    <option value="Room1">Room 1</option>
+                    <option value="Room2">Room 2</option>
+                    <option value="Room3">Room 3</option>
+                </select>
+
+                <p class="form-label">Select a Date:</p>
+                <div class="d-flex">
+                    <div class="col-6">
+                        <label for="start-date">Start Date</label>
+                        <input type="date" id="start-date" class="form-input" ID="BookingCalendar" />
+                    </div>
+                    <div class="col-6">
+                        <label for="start-date">ِEnd Date</label>
+                        <input type="date" id="end-date" class="form-input" ID="BookingCalendar" />
+                    </div>
+                </div>
+                <p class="error-message" id="error_message"></p>
+
+                <button class="btn" onclick="bookRoom()">Book</button>
+                <p id="BookingMessage" class="form-label"></p>
+
+        </div>
+    </div>
+</body>
+
+</html>

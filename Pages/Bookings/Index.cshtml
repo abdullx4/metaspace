@@ -1,0 +1,180 @@
+@page
+@model Booking.Pages.BookingsModel
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Bookings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 600px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            display: block;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .info-message {
+            color: blue;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .card {
+            border: 1px solid #ccc;
+            margin: 5px;
+            border-radius: 15px;
+            padding: 15px;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+
+<body>
+    
+    <script>
+
+        var firebaseConfig = {
+    
+            apiKey: "AIzaSyDQrSc8FZoWAEF76DMx5qK-IEGXcgMK-Dg",
+    
+            authDomain: "bookingrooms-5d701.firebaseapp.com",
+    
+            projectId: "bookingrooms-5d701",
+    
+            storageBucket: "bookingrooms-5d701.firebasestorage.app",
+    
+            messagingSenderId: "151352498300",
+    
+            appId: "1:151352498300:web:c011d765d0932cf5d811f9"
+    
+        };
+        var app = firebase.initializeApp(firebaseConfig);
+
+        var firestore = firebase.firestore();
+        var auth = firebase.auth();
+        
+        auth.onAuthStateChanged(user => {
+            
+            if(user && user.uid){
+                console.log(user.uid);
+                firestore
+                    .collection("Bookings")
+                    .where("userId", "==", user.uid)
+                    .get()
+                    .then(res => {
+                        var list = "";
+                        res.forEach(doc => {
+                            list += `<div class="card">
+                                <p>Room: ${doc.data().room}</p>
+                                <p>Booding Date: ${doc.data().startDate} ~ ${doc.data().endDate}</p>
+                                <p class="small">Date: ${doc.data().date.toDate().toLocaleDateString('en-GB')}</p>
+                            </div>`
+                        });
+                        document.getElementById('list').innerHTML = list;
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            } else {
+                window.location = '/login';
+            }
+        });
+
+        var logout = () => {
+            auth.signOut()
+            .then(() => {
+                window.location = '/login';
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        }
+    </script>
+
+
+    <div class="form-container">
+        <h2 class="headline">My Bookings</h2>
+        <div style="display: flex; flex-direction: row; justify-content: space-around;">
+            <a href="/new" class="btn btn-primary">New Room Booking</a>
+            <button class="btn btn-primary" onclick="logout()">Logout</button>
+        </div>
+        <div id="list">Loading...</div>
+    </div>
+
+</body>
+
+</html>

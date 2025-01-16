@@ -1,0 +1,196 @@
+@page
+@model Booking.Pages.RegisterModel
+@{
+ViewData["Title"] = "Register";
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            display: block;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .info-message {
+            color: blue;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+
+<body>
+
+    <script>
+
+        var firebaseConfig = {
+
+            apiKey: "AIzaSyDQrSc8FZoWAEF76DMx5qK-IEGXcgMK-Dg",
+
+            authDomain: "bookingrooms-5d701.firebaseapp.com",
+
+            projectId: "bookingrooms-5d701",
+
+            storageBucket: "bookingrooms-5d701.firebasestorage.app",
+
+            messagingSenderId: "151352498300",
+
+            appId: "1:151352498300:web:c011d765d0932cf5d811f9"
+
+        };
+        var app = firebase.initializeApp(firebaseConfig);
+        var firestore = firebase.firestore();
+
+        var handleRegister = () => {
+            var auth = firebase.auth();
+            var name = document.getElementById("name").value;
+            var phone = document.getElementById("phone").value;
+            var id_card = document.getElementById("id_card").value;
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+            var repeat_password = document.getElementById("repeat_password").value;
+            var error_message = document.getElementById("error_message");
+            error_message.innerText = "";
+
+            if (name == '' || phone == '' || email == '' || password == '' || id_card == '') {
+                error_message.innerText = "Enter all required feilds";
+            } else if(password != repeat_password){
+                error_message.innerText = "Password does not match";
+            } else if(phone.length < 7){
+                error_message.innerText = "Enter a valid phone number";
+            } else {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        firestore
+                            .collection("Users")
+                            .doc(userCredential.user.uid)
+                            .set({
+                                name: name,
+                                date: new Date(),
+                                phone: phone,
+                                id_card_no: id_card,
+                                type: 'user',
+                            })
+                            .then(res => {
+                                window.location = '/bookings';
+                            })
+                            .catch(error => {
+                                error_message.innerText = "Error occered...";
+                            })
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            }
+        }
+    </script>
+
+
+    <div class="form-container p-5">
+        <h2 class="form-group">Register a new account</h2>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="name" class="form-input" id="name" name="name" asp-for="name" required />
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone:</label>
+            <input type="phone" class="form-input" id="phone" name="phone" asp-for="phone" required />
+        </div>
+        <div class="form-group">
+            <label for="id_card">Id BookingCalendar No.:</label>
+            <input type="id_card" class="form-input" id="id_card" name="id_card" asp-for="id_card" required />
+        </div>
+        <div class="form-group">
+            <label for="email">E-mail:</label>
+            <input type="email" class="form-input" id="email" name="email" asp-for="Email" required />
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-input " id="password" name="password" required />
+        </div>
+        <div class="form-group">
+            <label for="repeat_password">Repeat Password:</label>
+            <input type="password" class="form-input " id="repeat_password" name="repeat_password" required />
+        </div>
+        <p class="error-message" id="error_message"></p>
+        <button type="submit" class="btn btn-primary" onclick="handleRegister()">Register</button>
+    </div>
+
+</body>
+
+</html>
